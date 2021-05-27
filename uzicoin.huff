@@ -1,0 +1,17 @@
+// Example ERC20 in huff
+// Includes a SafeMath implementation
+
+// token balances storage pointer
+#define macro BALANCE_LOCATION = takes(0) returns(1) {
+    0x00
+}
+
+// contract owner location
+#define macro OWNER_LOCATION = takes(0) returns(0) {
+    0x01
+}
+
+// stack state: (a+b) b
+dup2 dup2 gt // stack state: ((a+b) > b) (a+b) b
+dup3 dup3 eq // stack state: ((a+b) = b) ((a+b) > b) (a+b) b
+or           // stack state: ((a+b) >= b) (a+b) b
