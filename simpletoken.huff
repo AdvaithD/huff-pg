@@ -32,3 +32,17 @@
 #define macro APPROVAL_EVENT_SIGNATURE = takes(0) returns(1) {
 	0x8C5BE1E5EBEC7D5BD14F71427D1E84F3DD0314C0F7B2291E5B200AC8C7C3B925
 }
+
+
+// ================= UTILS ================================== //
+
+template <error_location>
+#define macro UTILS__NOT_PAYABLE = takes(0) returns(0) {
+	callvalue <error_location> jumpi
+}
+
+#define macro UTILS__ONLY_OWNER = takes(0) returns(0) {
+	OWNER_LOCATION() sload caller eq is_owner jumpi
+		0x00 0x00 revert
+	is_owner:
+}
