@@ -1,0 +1,17 @@
+// @notice - Simple ERC20 token written in Huff, a low level EVM programming language
+
+#define macro BALANCE_LOCATION = takes(0) returns(1) {
+	0x00 // do not change!
+}
+
+#define macro OWNER_LOCATION = takes(0) returns(1) {
+	0x01
+}
+
+#define macro TOTAL_SUPPLY_LOCATION = takes(0) returns(1) {
+	0x02
+}
+
+#define macro ALLOWANCE_LOCATION = takes(0) returns(1) {
+	0x03
+}
