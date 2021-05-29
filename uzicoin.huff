@@ -1,17 +1,175 @@
-// Example ERC20 in huff
+// Playground for an ERC20 token in huff
+// NOTE: For a cleaner version, please refer to
+// simpletoken.huff in the same repository
 // Includes a SafeMath implementation
 
-// token balances storage pointer
+// @dev - Token balances storage pointer
+// takes 1 stack item, adds 1 item to the stack
+// balances are the first storage slot here
 #define macro BALANCE_LOCATION = takes(0) returns(1) {
-    0x00
+    0x00 // push 0x00 onto the stack
 }
 
-// contract owner location
+// @dev - contract owner location
 #define macro OWNER_LOCATION = takes(0) returns(0) {
     0x01
 }
 
-// stack state: (a+b) b
-dup2 dup2 gt // stack state: ((a+b) > b) (a+b) b
-dup3 dup3 eq // stack state: ((a+b) = b) ((a+b) > b) (a+b) b
-or           // stack state: ((a+b) >= b) (a+b) b
+// @dev - storing total supply at 0x02 
+#define macro TOTAL_SUPPLY_LOCATION = takes(0) returns(1) {
+    0x02
+}
+
+// @dev - allowance location
+#define macro ALLOWANCE_LOCATION = takes(0) returns(1) {
+    0x03
+}
+
+// @dev - return total supply
+// note: takes and returns are 0 because return != on stack
+#define macro ERC20__TOTAL_SUPPLY = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    TOTAL_SUPPLY_LOCATION() sload
+    0x00 mstore
+    0x20 0x00 return
+}
+
+// @dev - implements the mint() function
+template <error_location>
+#define macro ERC20__MINT = takes(0) returns(0) {
+    UTILS__ONLY_OWNER()
+    0x04 calldataload ADDRESS_MASK() // get the 'to' address and mask
+    0 //from
+    TRANSFER_EVENT_SIGNATURE()
+    0x20
+    0x00
+    0x24 calldataload
+    // stack: [value, 0x00, 0x20, signature, from, to]
+    ERC20__TRANSFER_GIVE_TO()
+    // stack: [error1, value, 0x00, 0x20, signature, from, to]
+    dup2 dup1
+    // stack: [value, value, 0x00, 0x20, signature, from, to]
+    TOTAL_SUPPLY_LOCATION() sload add
+    dup1 TOTAL_SUPPLY_LOCATION() sstore
+    lt
+    // stack: [error2, error1, 0x00, 0x20, signature, from, to]
+    callvalue or or <error_location> jumpi
+    log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
+// @dev - implements balanceOf(address)
+// 1. Get the owner arg (via calldataload) starting at 0x04 given theres a fn signature
+// 2. This is followed by applying address mask
+// 3. Find storage key, sload the value and return it
+template <error_location>
+#define macro ERC20__BALANCE_OF = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<throw_error>()
+    0x04 calldataload ADDRESS_MASK()
+    0x00 mstore
+    0x40 0x00 sha3 // get the key for `balances[owner]`
+    sload
+    0x00 mstore
+    0x20 0x00 return
+}
+
+// @dev - retrieve allowance of an account (i.e: allowances[_owner][_spender]) similar to that of ERC20 in sol
+template <error_location>
+#define macro ERC20__ALLOWANCE = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    0x04 calldataload ADDRESS_MASK() // load owner to stack
+    0x00 mstore // store owner at 0x00
+    ALLOWANCE_LOCATION() 0x20 mstore // store allowance at 0x20
+    0x40 0x00 sha3 // hash owner
+
+    // stack: [key(allownaces(_owner))]
+    // store at 0x20 and store spender (for approval) at 0x00
+    0x20 mstore
+    0x24 calldatload ADDRESS_MASK()
+    0x00 mstore
+
+    // hash key(allowances[_owner]) and spender to get => key of allowances[_owner][_spender]
+    0x40 0x00 sha3
+    // sload to get allowances value
+    sload
+    0x00 mstore // store it at 0x00
+    0x20 0x00 return // return allowance
+}
+
+template <error_location>
+#define macro ERC20__APPROVE = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    0x04 calldataload ADDRESS_MASK()
+    caller
+    APPROVAL_EVENT_SIGNATURE()
+    0x20
+    0x00
+    // state: [0x00, 0x20, signature, msg.sender, _spender]
+    0x24 calldataload //loading value, given we need to store it at the key allowances[msg.sender][_spender]
+    dup1
+    // state: [value, value, 0x00, 0x20, signature, msg.sender, _spender]
+    caller 0x00 mstore
+    ALLOWANCE_LOCATION() 0x20 mstore
+    0x40 0x00 sha3
+    0x20 mstore
+    dup7 0x00 mstore
+    0x40 0x00 sha3
+    // state: [key(allowances[msg.sender][_spender]), value, value, 0x00, 0x20, signature, msg.sender, _spender] 
+    sstore
+
+    // state: [value, 0x00, 0x20, signature, ownner, _spender]
+    0x00 mstore
+    // state: [0x00, 0x20, signature, owner, _spender]
+    log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
+
+// @dev -- erc20 transferFrom()
+template <error_location>
+#define macro ERC20__TRANSFER_FROM = takes(0) returns(0) {
+    ERC20__TRANSFER_FROM_INIT()
+    ERC20__TRANSFER_GIVE_TO()
+    ERC20__TRANSFER_TAKE_FROM<dup6>()
+    ERC20__TRANSFER_SUB_ALLOWANCE()
+    // error3 error2 error1 value 0x00 0x20 signature from to
+    or or <error_location> jumpi
+    // value 0x00 0x20 signature from to
+    0x00 mstore log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
+
+// @dev - implements transferFrom(address from, address to, uint value)
+// the only diff between this and transfer is that transfer uses msg.sender whereas
+// transferFrom() uses 'address from'
+#define macro ERC20__TRANSFER_FROM_INIT = takes(0) returns(6) {
+    0x24 calldataload ADDRESS_MASK()
+    0x04 calldataload ADDRESS_MASK()
+    TRANSFER_EVENT_SIGNATURE()
+    0x20
+    0x00
+    0x44 calldataload // third argument (value)
+    // state: [value, 0x00, 0x20, signature, from, to]
+}
+
+#define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
+    // init state: [error2, error1, value, 0x00, 0x20, signature, from, to]
+    dup7 0x00 mstore
+    ALLOWANCE_LOCATION() 0x20 mstore
+    0x40 0x00 sha3
+   
+    0x20 mstore
+    caller 0x00 mstore
+    0x40 0x00 sha3
+    
+    dup1 sload 
+    dup5 dup2 
+    sub dup6  
+    swap3 sstore
+    lt o
+}
+
