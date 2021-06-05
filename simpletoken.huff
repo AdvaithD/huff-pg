@@ -46,3 +46,58 @@ template <error_location>
 		0x00 0x00 revert
 	is_owner:
 }
+
+// ================ CONSTRUCTOR ============================== //
+// @dev - takes the msg caller and stores it in OWNER_LOCATION (0x01)
+// caller pushes msg.sender onto the stack
+// sstore - consumes first two stack items and store 2nd stack item
+// (using the first as storage pointer)
+#define macro ERC20 = takes(0) returns(0) {
+    caller OWNER_LOCATION() sstore
+}
+
+// @dev - Handler for various ERC20 specific calls (approve, balanceOf, transfer, transferFrom etc)
+// we parse function signatures by passing first 4 bytes of calldata
+template <transfer, transfer_from, balance_of, allowance, approve, total_supply, mint, error_location>
+#define macro ERC20__FUNCTION_SIGNATURE = takes(0) returns(0) {
+	0x00 calldataload 224 shr // function signature
+	dup1 0x095ea7b3 eq <approve> jumpi
+	dup1 0x18160ddd eq <total_supply> jumpi
+	dup1 0x23b872dd eq <transfer_from> jumpi
+	dup1 0x40c10f19 eq <mint> jumpi
+	dup1 0x70a08231 eq <balance_of> jumpi
+	dup1 0xa9059cbb eq <transfer> jumpi
+	dup1 0xdd62ed3e eq <allowance> jumpi
+	UTILS__NOT_PAYABLE<error_location>()
+	0x00 0x00 return
+}
+
+// @dev - Main ERC20 boilerplate / skeleton
+#define macro ERC20__MAIN = takes(0) returns(0) {
+    ERC20__FUNCTION_SIGNATURE<
+        transfer,
+        transfer_from,
+        balance_of,
+        allowance,
+        approve,
+        total_supply,
+        mint,
+        throw_error
+    >()
+    transfer:
+        ERC20__TRANSFER<throw_error>()
+    transfer_from:
+        ERC20__TRANFSER_FROM<throw_error>()
+    balance_of:
+        ERC20__BALANCE_OF<throw_error>()
+    allowance:
+        ERC2O__ALLOWANCE<throw_error>()
+    approve:
+        ERC20__APPROVE<throw_error>()
+    total_supply:
+        ERC20__TOTAL_SUPPLY<throw_error>()
+    mint:
+        ERC20__MINT<throw_error>()
+    throw_error:
+        0x00 0x00 revert
+}
