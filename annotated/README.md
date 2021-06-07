@@ -1,0 +1,1 @@
+Contains an annotated version of `simpletoken.huff`, including how the stack is laid out after instructions are executed.

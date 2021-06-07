@@ -1,0 +1,8 @@
+{
+  "name": "huff-pg",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:AdvaithD/huff-pg.git",
+  "author": "Advaith <advaith@chainist.com>",
+  "license": "MIT"
+}
