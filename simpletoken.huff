@@ -157,3 +157,65 @@ template <from>
     lt // stack: [err2, err1, val, 0x00, 0x20, signature, from, to]
 }
 
+#define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
+    // stack: [error2, error1, value, 0x00, 0x20, signature, from, to]
+    dup7 0x00 mstore
+    ALLOWANCE_LOCATION() 0x20 mstore
+    0x40 0x00 sha3
+   
+    0x20 mstore
+    caller 0x00 mstore
+    0x40 0x00 sha3
+    
+    dup1 sload 
+    dup5 dup2 
+    sub dup6  
+    swap3 sstore
+    lt o
+}
+
+#define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
+    // init state: [error2, error1, value, 0x00, 0x20, signature, from, to]
+    dup7 0x00 mstore
+    ALLOWANCE_LOCATION() 0x20 mstore
+    0x40 0x00 sha3
+   
+    0x20 mstore
+    caller 0x00 mstore
+    0x40 0x00 sha3
+    
+    dup1 sload 
+    dup5 dup2 
+    sub dup6  
+    swap3 sstore
+    lt
+}
+
+// @dev -- erc20 transferFrom()
+template <error_location>
+#define macro ERC20__TRANSFER_FROM = takes(0) returns(0) {
+    ERC20__TRANSFER_FROM_INIT()
+    ERC20__TRANSFER_GIVE_TO()
+    ERC20__TRANSFER_TAKE_FROM<dup6>()
+    ERC20__TRANSFER_SUB_ALLOWANCE()
+    // stack: [error3, error2, error1, value, 0x00, 0x20, signature, from, to]
+    or or <error_location> jumpi
+    // stack: [value, 0x00, 0x20, signature, from, to]
+    0x00 mstore log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
+
+// @dev - implements transferFrom(address from, address to, uint value)
+// the only difference between this and transfer is that transfer uses msg.sender whereas
+// transferFrom() uses 'address from'
+#define macro ERC20__TRANSFER_FROM_INIT = takes(0) returns(6) {
+    0x24 calldataload ADDRESS_MASK()
+    0x04 calldataload ADDRESS_MASK()
+    TRANSFER_EVENT_SIGNATURE()
+    0x20
+    0x00
+    0x44 calldataload // third argument (value)
+    // stack: [value, 0x00, 0x20, signature, from, to]
+}
