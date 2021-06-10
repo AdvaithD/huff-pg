@@ -158,23 +158,6 @@ template <from>
 }
 
 #define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
-    // stack: [error2, error1, value, 0x00, 0x20, signature, from, to]
-    dup7 0x00 mstore
-    ALLOWANCE_LOCATION() 0x20 mstore
-    0x40 0x00 sha3
-   
-    0x20 mstore
-    caller 0x00 mstore
-    0x40 0x00 sha3
-    
-    dup1 sload 
-    dup5 dup2 
-    sub dup6  
-    swap3 sstore
-    lt o
-}
-
-#define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
     // init state: [error2, error1, value, 0x00, 0x20, signature, from, to]
     dup7 0x00 mstore
     ALLOWANCE_LOCATION() 0x20 mstore
@@ -218,4 +201,77 @@ template <error_location>
     0x00
     0x44 calldataload // third argument (value)
     // stack: [value, 0x00, 0x20, signature, from, to]
+}
+
+// @dev - implements balanceOf(address)
+template <error_location>
+#define macro ERC20__BALANCE_OF = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<throw_error>()
+    0x04 calldataload ADDRESS_MASK()
+    0x00 mstore
+    0x40 0x00 sha3 // get the key for `balances[owner]`
+    sload // stack now has balances[owner]
+    0x00 mstore
+    0x20 0x00 return
+}
+
+// @dev - allowance of an account (i.e: allowances[_owner][_spender])
+template <error_location>
+#define macro ERC20__ALLOWANCE = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    0x04 calldataload ADDRESS_MASK() // load owner to stack
+    0x00 mstore // store owner at 0x00
+    ALLOWANCE_LOCATION() 0x20 mstore // store allowance at 0x20
+    0x40 0x00 sha3 // hash owner
+
+    // stack: [key(allownaces(_owner))]
+    // store at 0x20 and store spender (for approval) at 0x00
+    0x20 mstore
+    0x24 calldatload ADDRESS_MASK()
+    0x00 mstore
+
+    // hash key(allowances[_owner]) and spender to get => key of allowances[_owner][_spender]
+    0x40 0x00 sha3
+    // sload to get allowances value
+    sload
+    0x00 mstore // store it at 0x00
+    0x20 0x00 return // return allowance
+}
+
+// @dev - return total supply
+template <error_location>
+#define macro ERC20__TOTAL_SUPPLY = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    TOTAL_SUPPLY_LOCATION() sload
+    0x00 mstore
+    0x20 0x00 return
+}
+
+template <error_location>
+#define macro ERC20__APPROVE = takes(0) returns(0) {
+    UTILS__NOT_PAYABLE<error_location>()
+    0x04 calldataload ADDRESS_MASK()
+    caller
+    APPROVAL_EVENT_SIGNATURE()
+    0x20
+    0x00
+    // state: [0x00, 0x20, signature, msg.sender, _spender]
+    0x24 calldataload
+    dup1
+    // state: [value, value, 0x00, 0x20, signature, msg.sender, _spender]
+    caller 0x00 mstore
+    ALLOWANCE_LOCATION() 0x20 mstore
+    0x40 0x00 sha3
+    0x20 mstore
+    dup7 0x00 mstore
+    0x40 0x00 sha3
+    // state: [key(allowances[msg.sender][_spender]), value, value, 0x00, 0x20, signature, msg.sender, _spender] 
+    sstore
+
+    // state: [value, 0x00, 0x20, signature, ownner, _spender]
+    0x00 mstore
+    // state: [0x00, 0x20, signature, owner, _spender]
+    log3
+    0x01 0x00 mstore
+    0x20 0x00 return
 }
