@@ -275,3 +275,28 @@ template <error_location>
     0x01 0x00 mstore
     0x20 0x00 return
 }
+
+// @dev - implements the mint() function
+template <error_location>
+#define macro ERC20__MINT = takes(0) returns(0) {
+    UTILS__ONLY_OWNER()
+    0x04 calldataload ADDRESS_MASK() // get the 'to' address and mask
+    0 //from
+    TRANSFER_EVENT_SIGNATURE()
+    0x20
+    0x00
+    0x24 calldataload
+    // stack: [value, 0x00, 0x20, signature, from, to]
+    ERC20__TRANSFER_GIVE_TO()
+    // stack: [error1, value, 0x00, 0x20, signature, from, to]
+    dup2 dup1
+    // stack: [value, value, 0x00, 0x20, signature, from, to]
+    TOTAL_SUPPLY_LOCATION() sload add
+    dup1 TOTAL_SUPPLY_LOCATION() sstore
+    lt
+    // stack: [error2, error1, 0x00, 0x20, signature, from, to]
+    callvalue or or <error_location> jumpi
+    log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
