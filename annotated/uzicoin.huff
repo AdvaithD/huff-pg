@@ -27,6 +27,7 @@
 
 // @dev - return total supply
 // note: takes and returns are 0 because return != on stack
+template <error_location>
 #define macro ERC20__TOTAL_SUPPLY = takes(0) returns(0) {
     UTILS__NOT_PAYABLE<error_location>()
     TOTAL_SUPPLY_LOCATION() sload
@@ -134,9 +135,9 @@ template <error_location>
     ERC20__TRANSFER_GIVE_TO()
     ERC20__TRANSFER_TAKE_FROM<dup6>()
     ERC20__TRANSFER_SUB_ALLOWANCE()
-    // error3 error2 error1 value 0x00 0x20 signature from to
+    // [error3, error2, error1, value, 0x00, 0x20, signature, from, to]
     or or <error_location> jumpi
-    // value 0x00 0x20 signature from to
+    // [value, 0x00, 0x20, signature, from, to]
     0x00 mstore log3
     0x01 0x00 mstore
     0x20 0x00 return
@@ -170,7 +171,7 @@ template <error_location>
     dup5 dup2 
     sub dup6  
     swap3 sstore
-    lt o
+    lt
 }
 
 // ------------------- SAFEMATH ----------------------------------------------------- //

@@ -72,35 +72,7 @@ template <transfer, transfer_from, balance_of, allowance, approve, total_supply,
 	0x00 0x00 return
 }
 
-// @dev - Main ERC20 boilerplate / skeleton
-#define macro ERC20__MAIN = takes(0) returns(0) {
-    ERC20__FUNCTION_SIGNATURE<
-        transfer,
-        transfer_from,
-        balance_of,
-        allowance,
-        approve,
-        total_supply,
-        mint,
-        throw_error
-    >()
-    transfer:
-        ERC20__TRANSFER<throw_error>()
-    transfer_from:
-        ERC20__TRANFSER_FROM<throw_error>()
-    balance_of:
-        ERC20__BALANCE_OF<throw_error>()
-    allowance:
-        ERC2O__ALLOWANCE<throw_error>()
-    approve:
-        ERC20__APPROVE<throw_error>()
-    total_supply:
-        ERC20__TOTAL_SUPPLY<throw_error>()
-    mint:
-        ERC20__MINT<throw_error>()
-    throw_error:
-        0x00 0x00 revert
-}
+
 
 // ERC20 transfer wrapper function (calls 3 other macros)
 template <error_location>
@@ -299,4 +271,34 @@ template <error_location>
     log3
     0x01 0x00 mstore
     0x20 0x00 return
+}
+
+// @dev - Main ERC20 boilerplate / skeleton
+#define macro ERC20__MAIN = takes(0) returns(0) {
+    ERC20__FUNCTION_SIGNATURE<
+        transfer,
+        transfer_from,
+        balance_of,
+        allowance,
+        approve,
+        total_supply,
+        mint,
+        throw_error
+    >()
+    transfer:
+        ERC20__TRANSFER<throw_error>()
+    transfer_from:
+        ERC20__TRANFSER_FROM<throw_error>()
+    balance_of:
+        ERC20__BALANCE_OF<throw_error>()
+    allowance:
+        ERC2O__ALLOWANCE<throw_error>()
+    approve:
+        ERC20__APPROVE<throw_error>()
+    total_supply:
+        ERC20__TOTAL_SUPPLY<throw_error>()
+    mint:
+        ERC20__MINT<throw_error>()
+    throw_error:
+        0x00 0x00 revert
 }
