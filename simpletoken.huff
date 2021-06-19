@@ -74,18 +74,6 @@ template <transfer, transfer_from, balance_of, allowance, approve, total_supply,
 
 
 
-// ERC20 transfer wrapper function (calls 3 other macros)
-template <error_location>
-#define macro ERC20__TRANSFER = takes(0) returns(0) {
-    ERC20__TRANSFER_INIT()
-    ERC20__TRANSFER_GIVE_TO()
-    ERC20__TRANSFER_TAKE_FROM<caller>() // passing caller as an argument
-    callvalue or or <error_location> jumpi // any non zero value triggers jump instruction
-    0x00 mstore log3
-    0x01 0x00 mstore
-    0x20 0x00 return
-}
-
 #define macro ERC20__TRANSFER_INIT = takes(0) returns(6) {
     0x04 calldataload ADDRESS_MASK() // load and mask
     caller                           // put msg sender onto stack
@@ -94,13 +82,13 @@ template <error_location>
     0x00
     0x24 calldataload
     // stack: [value, 0x20, 0x00, signature, from, to]
-    dup6 0x00 mstore
-    0x40 0x00 sha3 // 0x40 is a free mem pointer
+    // dup6 0x00 mstore
+    // 0x40 0x00 sha3 // 0x40 is a free mem pointer
 
     // updating balances[to]
-    dup1 sload
-    dup3
-    MATH__ADD()
+    // dup1 sload
+    // dup3
+    // MATH__ADD()
 }
 
 // @dev - increment balance
@@ -129,6 +117,18 @@ template <from>
     lt // stack: [err2, err1, val, 0x00, 0x20, signature, from, to]
 }
 
+// ERC20 transfer wrapper function (calls 3 other macros)
+template <error_location>
+#define macro ERC20__TRANSFER = takes(0) returns(0) {
+    ERC20__TRANSFER_INIT()
+    ERC20__TRANSFER_GIVE_TO()
+    ERC20__TRANSFER_TAKE_FROM<caller>() // passing caller as an argument
+    callvalue or or <error_location> jumpi // any non zero value triggers jump instruction
+    0x00 mstore log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
 #define macro ERC20__TRANSFER_SUB_ALLOWANCE = takes(8) returns (9) {
     // init state: [error2, error1, value, 0x00, 0x20, signature, from, to]
     dup7 0x00 mstore
@@ -146,20 +146,7 @@ template <from>
     lt
 }
 
-// @dev -- erc20 transferFrom()
-template <error_location>
-#define macro ERC20__TRANSFER_FROM = takes(0) returns(0) {
-    ERC20__TRANSFER_FROM_INIT()
-    ERC20__TRANSFER_GIVE_TO()
-    ERC20__TRANSFER_TAKE_FROM<dup6>()
-    ERC20__TRANSFER_SUB_ALLOWANCE()
-    // stack: [error3, error2, error1, value, 0x00, 0x20, signature, from, to]
-    or or <error_location> jumpi
-    // stack: [value, 0x00, 0x20, signature, from, to]
-    0x00 mstore log3
-    0x01 0x00 mstore
-    0x20 0x00 return
-}
+
 
 
 // @dev - implements transferFrom(address from, address to, uint value)
@@ -189,7 +176,7 @@ template <error_location>
 
 // @dev - allowance of an account (i.e: allowances[_owner][_spender])
 template <error_location>
-#define macro ERC20__ALLOWANCE = takes(0) returns(0) {
+#define macro ERC2O__ALLOWANCE = takes(0) returns(0) {
     UTILS__NOT_PAYABLE<error_location>()
     0x04 calldataload ADDRESS_MASK() // load owner to stack
     0x00 mstore // store owner at 0x00
@@ -248,6 +235,21 @@ template <error_location>
     0x20 0x00 return
 }
 
+// @dev -- erc20 transferFrom()
+template <error_location>
+#define macro ERC20__TRANSFER_FROM = takes(0) returns(0) {
+    ERC20__TRANSFER_FROM_INIT()
+    ERC20__TRANSFER_GIVE_TO()
+    ERC20__TRANSFER_TAKE_FROM<dup6>()
+    ERC20__TRANSFER_SUB_ALLOWANCE()
+    // stack: [error3, error2, error1, value, 0x00, 0x20, signature, from, to]
+    or or <error_location> jumpi
+    // stack: [value, 0x00, 0x20, signature, from, to]
+    0x00 mstore log3
+    0x01 0x00 mstore
+    0x20 0x00 return
+}
+
 // @dev - implements the mint() function
 template <error_location>
 #define macro ERC20__MINT = takes(0) returns(0) {
@@ -288,7 +290,7 @@ template <error_location>
     transfer:
         ERC20__TRANSFER<throw_error>()
     transfer_from:
-        ERC20__TRANFSER_FROM<throw_error>()
+        ERC20__TRANSFER_FROM<throw_error>()
     balance_of:
         ERC20__BALANCE_OF<throw_error>()
     allowance:
