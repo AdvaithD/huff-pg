@@ -1,7 +1,7 @@
 ### **Huff playground**
 
 Huff is a low-level programming language used to instrument macros inside of an EVM. This repo serves as a playground towards learning huff and lower level EVM details.
-#### Introduction
+#### **Introduction**
 
 Huff was created while writing a zk proof library (weierstrudel). At the time, this was something that could not be done in solidity.
 
@@ -13,7 +13,7 @@ Huff is about as close as you can get to the EVM in terms of assembly code.
 - Ultimately, if your goal is to write gas-efficient contracts, huff is the way to go.
 
 
-##### ERC20 Spec
+##### **ERC20 Spec**
 
 A given ERC20 token has the following functions, all of which we will be implementing inside of a huff program (in the form of macros)
 ```
@@ -47,3 +47,9 @@ contract is interested in (e.g: balance location, owner address location)
 - `keccack256` hash of an indexed element is used as the database lookup index (TODO: dig deeper)
 - **Event signature:** is the `keccack256` hash of the event signature (e.g: `Transfer(address)`, `Approval(address, address, uint)`)
 - We arrive at the conclusion that we need to put the data associated with `topics` onto the stack.
+
+### **Credits**
+
+The aztec team for the tutorials: [1](https://medium.com/aztec-protocol/from-zero-to-nowhere-smart-contract-programming-in-huff-1-2-ba2b6de7fa83) [2](https://medium.com/aztec-protocol/from-zero-to-nowhere-smart-contract-programming-in-huff-2-3-5438ef7e5beb) [3](https://medium.com/aztec-protocol/from-zero-to-nowhere-smart-contract-programming-in-huff-3-4-6b347e23d66e) [4](https://medium.com/aztec-protocol/from-zero-to-nowhere-smart-contract-programming-in-huff-4-4-9e6c34648992)
+
+Solidity workshop on storage [source](https://github.com/androlo/solidity-workshop/blob/master/tutorials/2016-03-13-advanced-solidity-IV.md)

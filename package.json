@@ -4,5 +4,15 @@
   "main": "index.js",
   "repository": "git@github.com:AdvaithD/huff-pg.git",
   "author": "Advaith <advaith@chainist.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@aztec/huff": "^0.0.3",
+    "bn.js": "^5.2.0",
+    "chai": "^4.3.4",
+    "mocha": "^9.0.3",
+    "npmlog": "^5.0.0"
+  },
+  "scripts": {
+    "test": "mocha ./test/ --bail --colors --exit --recursive --reporter spec --trace-warnings"
+  }
 }
