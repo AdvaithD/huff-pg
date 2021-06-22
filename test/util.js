@@ -4,14 +4,12 @@
 const {compiler, parser, Runtime} = require('@aztec/huff')
 const BigNumber = require('bn.js')
 const log = require('npmlog')
+const config = require('../config')
 
 // create runtime with the huff contract in context
 const erc20Runtime = new Runtime.Runtime('../simpletoken.huff', __dirname)
 // create a vm (spawns an ethereumjs-vm instance)
 const vm = Runtime.getNewVM()
-
-// boolean flags
-const shouldLogSteps = true
 
 // coerce return data to a BigNumber
 const coerceToBn = (data) => {
@@ -19,7 +17,7 @@ const coerceToBn = (data) => {
 }
 
 // log each opcode
-if (shouldLogSteps) {
+if (config.shouldLogSteps) {
     vm.on('step', (step) => {
         log.info('step', `OPCODE: ${step.opcode.name} | Stack: ${step.stack}`)
     })
@@ -71,9 +69,8 @@ const transfer = async (caller, to, value) => {
     const initMemory = []
     const stack = []
     const callValue = 0
-    const callerAddress = 0
 
-    const data = await erc20Runtime(vm, 'ERC20__MAIN', stack, initMemory, calldata, callValue, callerAddress)
+    const data = await erc20Runtime(vm, 'ERC20__MAIN', stack, initMemory, calldata, callValue, caller)
     log.info('GAS', `Gas used by transfer(): ${data.gas}`)
 }
 
@@ -135,9 +132,8 @@ const transferFrom = async (caller, owner, recipient, amount) => {
     const initMemory = []
     const stack = []
     const callValue = 0;
-    const callerAddress = caller;
 
-    const data = await erc20Runtime(vm, 'ERC20__MAIN', stack, initMemory, calldata, callValue, callerAddress);
+    const data = await erc20Runtime(vm, 'ERC20__MAIN', stack, initMemory, calldata, callValue, caller);
     log.info('GAS', `Gas used by transferFrom(): ${data.gas}`)
 }
 
