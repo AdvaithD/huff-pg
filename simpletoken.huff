@@ -146,9 +146,6 @@ template <error_location>
     lt
 }
 
-
-
-
 // @dev - implements transferFrom(address from, address to, uint value)
 // the only difference between this and transfer is that transfer uses msg.sender whereas
 // transferFrom() uses 'address from'
@@ -186,7 +183,7 @@ template <error_location>
     // stack: [key(allownaces(_owner))]
     // store at 0x20 and store spender (for approval) at 0x00
     0x20 mstore
-    0x24 calldatload ADDRESS_MASK()
+    0x24 calldataload ADDRESS_MASK()
     0x00 mstore
 
     // hash key(allowances[_owner]) and spender to get => key of allowances[_owner][_spender]
@@ -243,7 +240,7 @@ template <error_location>
     ERC20__TRANSFER_TAKE_FROM<dup6>()
     ERC20__TRANSFER_SUB_ALLOWANCE()
     // stack: [error3, error2, error1, value, 0x00, 0x20, signature, from, to]
-    or or <error_location> jumpi
+    callvalue or or or <error_location> jumpi
     // stack: [value, 0x00, 0x20, signature, from, to]
     0x00 mstore log3
     0x01 0x00 mstore
