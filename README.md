@@ -12,8 +12,55 @@ Huff is about as close as you can get to the EVM in terms of assembly code.
 - Huff doesn't have functions or variables
 - Ultimately, if your goal is to write gas-efficient contracts, huff is the way to go.
 
+### **Instructions**
 
-##### **ERC20 Spec**
+1. Clone repo, run `yarn install`
+2. To run tests, run `yarn test`
+3. If you'd like to see OPCODES and stack logged on each interaction, modify `shouldLogSteps` in `config.js` to `true`.
+
+Expected output:
+
+```
+  Simpletoken - ERC20 in Huff
+info GAS Gas used by balanceOf(): 422
+info GAS Gas used by balanceOf(): 422
+    ✔ checks balances and totalSupply on init == 0
+info GAS Gas used by totalSupply(): 290
+    ✔ should expect initial supply == 0
+info GAS Gas used by mint(): 42394
+info GAS Gas used by balanceOf(): 422
+    ✔ should mint tokens to owner address
+info GAS Gas used by totalSupply(): 290
+    ✔ should have 16k as totalSupply (post mint)
+info GAS Gas used by mint(): 27394
+info GAS Gas used by balanceOf(): 422
+info GAS Gas used by totalSupply(): 290
+    ✔ deployer should mint tokens to address1
+info GAS Gas used by transfer(): 27533
+info GAS Gas used by balanceOf(): 422
+info GAS Gas used by balanceOf(): 422
+    ✔ should be able to transfer tokens
+info GAS Gas used by getAllowance(): 547
+    ✔ should check allowances and assert == 0
+info GAS Gas used by approve(): 21993
+info GAS Gas used by getAllowance(): 547
+    ✔ should set allowance and check new values
+```
+
+### **Project Structure**
+
+```
+./annotated
+    /uzicoin.huff -         - Huff contract written with a ton of rough notes, hence annotated
+./test
+    /util.js                - Contains helpers to initiate a VM, Huff runtime, orchestrating fn calls
+    /simpletoken.spec.js    - Test suite for the erc20
+config.js                   - contains a flag (shouldLogSteps), turning this to true logs OPCODES 
+                              and stack on every interaction inside the VM
+simpletoken.huff            - Clean version of ERC20 written in huff
+```
+
+### **ERC20 Spec**
 
 A given ERC20 token has the following functions, all of which we will be implementing inside of a huff program (in the form of macros)
 ```
@@ -47,6 +94,7 @@ contract is interested in (e.g: balance location, owner address location)
 - `keccack256` hash of an indexed element is used as the database lookup index (TODO: dig deeper)
 - **Event signature:** is the `keccack256` hash of the event signature (e.g: `Transfer(address)`, `Approval(address, address, uint)`)
 - We arrive at the conclusion that we need to put the data associated with `topics` onto the stack.
+
 
 ### **Credits**
 
